@@ -25,6 +25,104 @@ async def send_slack_message(channel: str, text: str) -> Dict[str, Any]:
         return {"ok": False, "error": str(e)}
 
 @mcp.tool()
+async def send_slack_comment(channel: str, text: str, timezone: str) -> Dict[str, Any]:
+    """지정된 Slack 채널의 메시지에 댓글을 답니다.
+    
+    Args:
+        channel (str): 메시지를 전송할 채널 ID 또는 이름 (예: #general, C1234567890)
+        text (str): 전송할 댓글 내용
+        timezone (str): 댓글을 달 메시지의 타임스탬프
+        
+    Returns:
+        Dict[str, Any]: 메시지 전송 결과
+    """
+    try:
+        return slack_client.send_comment(channel, text, timezone)
+    except ValueError as e:
+        return {"ok": False, "error": str(e)}
+    
+@mcp.tool()
+async def update_slack_message(channel: str, timestamp: str, new_text: str) -> Dict[str, Any]:
+    """지정된 Slack 채널에 전송한 메시지를 편집합니다.
+    
+    Args:
+        channel (str): 메시지를 전송할 채널 ID 또는 이름 (예: C1234567890)
+        timestamp (str): 편집할 메시지의 타임스탬프 (예: 1748521071.720959)
+        new_text (str): 새로운 메시지 내용
+        
+    Returns:
+        Dict[str, Any]: 메시지 전송 결과
+    """
+    try:
+        return slack_client.update_message(channel, timestamp, new_text)
+    except ValueError as e:
+        return {"ok": False, "error": str(e)}
+    
+@mcp.tool()
+async def delete_slack_message(channel: str, timestamp: str) -> Dict[str, Any]:
+    """지정된 Slack 채널에 전송한 메시지를 편집합니다.
+    
+    Args:
+        channel (str): 메시지를 전송할 채널 ID 또는 이름 (예: C1234567890)
+        timestamp (str): 삭제할 메시지의 타임스탬프 (예: 1748521071.720959)
+        
+    Returns:
+        Dict[str, Any]: 메시지 전송 결과
+    """
+    try:
+        return slack_client.delete_message(channel, timestamp)
+    except ValueError as e:
+        return {"ok": False, "error": str(e)}
+    
+@mcp.tool()
+async def schedule_slack_message(channel: str, send_at: str, text: str) -> Dict[str, Any]:
+    """지정된 Slack 채널에 메시지를 예약합니다.
+    
+    Args:
+        channel (str): 메시지를 전송할 채널 ID 또는 이름 (예: C1234567890, #general)
+        send_at (str): 삭제할 메시지의 타임스탬프 (예: 1748521071.720959)
+        text (str): 전송할 메시지 내용
+        
+    Returns:
+        Dict[str, Any]: 메시지 전송 결과
+    """
+    try:
+        return slack_client.schedule_message(channel, send_at, text)
+    except ValueError as e:
+        return {"ok": False, "error": str(e)}
+    
+@mcp.tool()
+async def get_slack_scheduled_list(channel: Optional[str] = None) -> Dict[str, Any]:
+    """메시지 예약 목록을 조회합니다.
+    
+    Args:
+        channel (str, optional): 기본값은 Null로 모든 채널 조회, 채널 이름 입력 시 해당 채널 조회
+        
+    Returns:
+        Dict[str, Any]: 메시지 전송 결과
+    """
+    try:
+        return slack_client.get_scheduled_list(channel)
+    except ValueError as e:
+        return {"ok": False, "error": str(e)}
+
+@mcp.tool()
+async def delete_slack_scheduled_message(channel: str, scheduled_message_id: str) -> Dict[str, Any]:
+    """예약된 메세지를 삭제합니다.
+    
+    Args:
+        channel (str): 예약된 메시지가 존재하는 채널 ID(예: C1234567890)
+        scheduled_message_id (str): 삭제할 메시지의 예약 ID (예: Q08US8GRVKN)
+        
+    Returns:
+        Dict[str, Any]: 메시지 전송 결과
+    """
+    try:
+        return slack_client.delete_scheduled_message(channel, scheduled_message_id)
+    except ValueError as e:
+        return {"ok": False, "error": str(e)}
+
+@mcp.tool()
 async def get_slack_channels() -> List[Dict[str, Any]]:
     """접근 가능한 모든 Slack 채널 목록을 조회합니다.
     
@@ -128,6 +226,23 @@ async def add_slack_reaction(channel: str, timestamp: str, reaction: str) -> Dic
     """
     try:
         return slack_client.add_reaction(channel, timestamp, reaction)
+    except ValueError as e:
+        return {"ok": False, "error": str(e)}
+    
+@mcp.tool()
+async def remove_slack_reaction(channel: str, timestamp: str, reaction: str) -> Dict[str, Any]:
+    """메시지에 추가한 이모지 반응을 삭제합니다.
+    
+    Args:
+        channel (str): 메시지가 있는 채널 ID
+        timestamp (str): 메시지의 타임스탬프
+        reaction (str): 추가할 이모지 이름 (콜론 제외)
+        
+    Returns:
+        Dict[str, Any]: 반응 추가 결과
+    """
+    try:
+        return slack_client.remove_reaction(channel, timestamp, reaction)
     except ValueError as e:
         return {"ok": False, "error": str(e)}
 

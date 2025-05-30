@@ -4,6 +4,7 @@ import os
 from typing import Dict, Any, List, Optional
 import requests
 from dotenv import load_dotenv
+from datetime import datetime, timezone, timedelta
 
 class SlackAPIClient:
     """Slack API와 상호작용하는 클라이언트 클래스입니다.
@@ -68,20 +69,244 @@ class SlackAPIClient:
         Returns:
             Dict[str, Any]: 메시지 전송 결과
         """
-        return self._make_request(
+        response = self._make_request(
             "POST",
             "chat.postMessage",
             json={"channel": channel, "text": text}
         )
+
+        return_response = {}
+        if response["ok"]:
+            return_response = {
+                "ok": True,
+                "description": "🎉 메시지 전송에 성공했습니다 🎉",
+                "message": {
+                    "text": text,
+                    "channel": channel,
+                    "ts": response["ts"]
+                }
+            }
+        else:
+            return_response = {
+                "ok": False,
+                "error": response["error"]
+            }
+
+        return return_response
+    
+    def send_comment(self, channel: str, text: str, timestamp: str) -> Dict[str, Any]:
+        """지정된 채널의 메시지에 댓글을 답니다.
+        
+        Args:
+            channel (str): 메시지를 전송할 채널 ID 또는 이름
+            text (str): 전송할 메시지 내용
+            timestamp (str): 댓글을 달 메시지의 타임스탬프
+
+        Returns:
+            Dict[str, Any]: 메시지 전송 결과
+        """
+        response = self._make_request(
+            "POST",
+            "chat.postMessage",
+            json={"channel": channel, "text": text, "thread_ts": timestamp}
+        )
+
+        return_response = {}
+        if response["ok"]:
+            return_response = {
+                "ok": True,
+                "description": "🎉 메시지 전송에 성공했습니다 🎉",
+                "message": {
+                    "text": text,
+                    "channel": channel,
+                    "ts": response["ts"]
+                }
+            }
+        else:
+            return_response = {
+                "ok": False,
+                "error": response["error"]
+            }
+
+        return return_response
+    
+    def update_message(self, channel: str, timestamp: str, new_text: str) -> Dict[str, Any]:
+        """지정된 채널에 메시지를 편집합니다.
+        
+        Args:
+            channel (str): 메시지를 전송할 채널 ID 또는 이름
+            timestamp (str): 편집할 메시지의 타임스탬프
+            new_text (str): 편집할 새로운 메시지 내용
+            
+        Returns:
+            Dict[str, Any]: 메시지 전송 결과
+        """
+        response = self._make_request(
+            "POST",
+            "chat.update",
+            json={"channel": channel, "ts": timestamp, "text": new_text}    
+        )
+
+        return_response = {}
+        if response["ok"]:
+            return_response = {
+                "ok": True,
+                "description": "🎉 메시지 수정에 성공했습니다 🎉"
+            }
+        else:
+            return_response = {
+                "ok": False,
+                "error": response["error"]
+            }
+
+        return response
+    
+    def delete_message(self, channel: str, timestamp: str) -> Dict[str, Any]:
+        """지정된 채널에 메시지를 삭제합니다.
+        
+        Args:
+            channel (str): 메시지를 전송할 채널 ID 또는 이름
+            timestamp (str): 삭제할 메시지의 타임스탬프
+            
+        Returns:
+            Dict[str, Any]: 메시지 전송 결과
+        """
+        response = self._make_request(
+            "POST",
+            "chat.delete",
+            json={"channel": channel, "ts": timestamp}    
+        )
+
+        return_response = {}
+        if response["ok"]:
+            return_response = {
+                "ok": True,
+                "description": "🎉 메시지 수정에 성공했습니다 🎉"
+            }
+        else:
+            return_response = {
+                "ok": False,
+                "error": response["error"]
+            }
+
+        return response
+    
+    def schedule_message(self, channel: str, send_at: str, text: str) -> Dict[str, Any]:
+        """지정된 채널에 메시지를 예약합니다.
+        
+        Args:
+            channel (str): 메시지를 전송할 채널 ID 또는 이름
+            send_at (str): 메시지를 전송할 시간 (예: 2025-05-30 10:00)
+            text (str): 전송할 메시지 내용
+            
+        Returns:
+            Dict[str, Any]: 메시지 전송 결과
+        """
+        kst = timezone(timedelta(hours=9))
+        unixtime = int(datetime.strptime(send_at, "%Y-%m-%d %H:%M").replace(tzinfo=kst).timestamp())
+
+        response = self._make_request(
+            "POST",
+            "chat.scheduleMessage",
+            json={"channel": channel, "post_at": unixtime, "text": text}    
+        )
+
+        return_response = {}
+        if response["ok"]:
+            return_response = {
+                "ok": True,
+                "description": "🎉 메시지 수정에 성공했습니다 🎉"
+            }
+        else:
+            return_response = {
+                "ok": False,
+                "error": response["error"]
+            }
+
+        return response
+    
+    def get_scheduled_list(self, channel: Optional[str] = None) -> Dict[str, Any]:
+        """예약된 메시지 목록을 조회합니다.
+        
+        Args:
+            channel (str, optional): 기본값은 Null로 모든 채널 조회, 채널 ID 입력 시 해당 채널 조회
+            
+        Returns:
+            Dict[str, Any]: 메시지 전송 결과
+        """
+        
+        if channel is None:
+            channel = ""
+        response = self._make_request(
+            "POST",
+            "chat.scheduledMessages.list?channel=" + channel    
+        )
+
+        return_response = {}
+        if response["ok"]:
+            return_response = {
+                "ok": True,
+                "description": "🎉 메시지 수정에 성공했습니다 🎉"
+            }
+        else:
+            return_response = {
+                "ok": False,
+                "error": response["error"]
+            }
+
+        return response
+    
+    def delete_scheduled_message(self, channel: str, scheduled_message_id: str) -> Dict[str, Any]:
+        """지정 채널의 예약 메시지를 삭제합니다.
+        
+        Args:
+            channel (str): 예약된 메시지가 존재하는 채널 ID(예: C1234567890)
+            scheduled_message_id (str): 삭제할 메시지의 예약 ID (예: Q08US8GRVKN)
+            
+        Returns:
+            Dict[str, Any]: 메시지 전송 결과
+        """
+        response = self._make_request(
+            "POST",
+            "chat.deleteScheduledMessage",  
+            json={"channel": channel, "scheduled_message_id": scheduled_message_id}
+        )
+
+        return_response = {}
+        if response["ok"]:
+            return_response = {
+                "ok": True,
+                "description": "🎉 메시지 수정에 성공했습니다 🎉"
+            }
+        else:
+            return_response = {
+                "ok": False,
+                "error": response["error"]
+            }
+
+        return response
     
     def get_channels(self) -> List[Dict[str, Any]]:
         """접근 가능한 모든 채널 목록을 조회합니다.
-        
+        Args:
+            없음
+
         Returns:
             List[Dict[str, Any]]: 채널 목록 (각 채널의 ID, 이름, 상태 등 포함)
         """
         response = self._make_request("GET", "conversations.list")
-        return response["channels"]
+        
+        formatted_response = []
+        for channel in response["channels"]:
+            formatted_response.append({
+                "id": channel["id"],
+                "name": channel["name"],
+                "description": channel["purpose"]["value"],
+                "is_member": channel["is_member"],
+                "member_count": channel["num_members"]
+
+            })
+        return response
     
     def get_channel_history(self, channel_id: str, limit: int = 10) -> List[Dict[str, Any]]:
         """지정된 채널의 메시지 히스토리를 조회합니다.
@@ -210,6 +435,27 @@ class SlackAPIClient:
         return self._make_request(
             "POST",
             "reactions.add",
+            json={
+                "channel": channel,
+                "timestamp": timestamp,
+                "name": reaction
+            }
+        )
+    
+    def remove_reaction(self, channel: str, timestamp: str, reaction: str) -> Dict[str, Any]:
+        """메시지에 추가한 이모지 반응을 삭제합니다.
+        
+        Args:
+            channel (str): 메시지가 있는 채널 ID
+            timestamp (str): 메시지의 타임스탬프
+            reaction (str): 추가할 이모지 이름 (콜론 제외, 영어로 입력)
+            
+        Returns:
+            Dict[str, Any]: 반응 추가 결과
+        """
+        return self._make_request(
+            "POST",
+            "reactions.remove",
             json={
                 "channel": channel,
                 "timestamp": timestamp,
